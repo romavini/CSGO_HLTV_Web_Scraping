@@ -5,5 +5,5 @@ setup(
     version="1.0.0",
     description="A bot to bat in CSGO matches.",
     author="romavini",
-    packages=["cs_py_bot"],
+    packages=["botcsgo"],
 )
