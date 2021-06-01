@@ -297,7 +297,9 @@ class ExtractDetails:
 
             except NoSuchElementException:
                 self.print_message(
-                    "NoSuchElementException", f"Match disregarded for missing data.ulr: {url}", "n"
+                    "NoSuchElementException",
+                    f"Match disregarded for missing data.ulr: {url}",
+                    "n",
                 )
 
             except IndexError:
@@ -307,9 +309,10 @@ class ExtractDetails:
 
             except WebDriverException:
                 self.print_message(
-                    "WebDriverException", f"Match disregarded for missing data.ulr: {url}", "n"
+                    "WebDriverException",
+                    f"Match disregarded for missing data.ulr: {url}",
+                    "n",
                 )
-
 
         return details
 
