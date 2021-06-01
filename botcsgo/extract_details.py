@@ -5,26 +5,17 @@ from time import sleep
 from typing import Dict, List
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
 
 
 class ExtractDetails:
-    def __init__(self, mode: str = ""):
-        self.chrome_options = Options()
-        self.chrome_options.add_argument("--disable-extensions")
-
-        if mode.lower() == 's':
-            self.chrome_options.add_argument("--disable-gpu")
-            self.chrome_options.add_argument("--headless")
-            self.chrome_options.add_argument("--log-level=3")
-            self.chrome_options.add_argument("--disable-software-rasterizer")
+    def __init__(self, browser):
+        self.browser = browser
 
         self.to_close = False
         self.filename = "total_details.json"
 
-    def print_message(
-        self, status: str, text: str, message_type: str = "n"
-    ):
+    def print_message(self, status: str, text: str, message_type: str = "n"):
         """Print error given Exception
 
         Keyword argument:
@@ -59,7 +50,7 @@ class ExtractDetails:
         """Return the date in the top of the page"""
         return {
             "date": self.browser.find_element_by_class_name("date").text,
-            "time": self.browser.find_element_by_class_name("time").text
+            "time": self.browser.find_element_by_class_name("time").text,
         }
 
     def get_flexbox(self) -> Dict[str, str]:
@@ -133,8 +124,7 @@ class ExtractDetails:
 
         for idx, side in enumerate(sides):
             ct = int(side.find_element_by_class_name("ct").text)
-            score_first_team = int(side.text.strip(
-                "(").split(";")[0].split(":")[0])
+            score_first_team = int(side.text.strip("(").split(";")[0].split(":")[0])
             if ct == score_first_team:
                 flexbox_dict[f"side_first_team_M{idx+1}"] = "CT"
                 flexbox_dict[f"side_second_team_M{idx+1}"] = "T"
@@ -145,15 +135,9 @@ class ExtractDetails:
             scores = side.text.split("(")[1]
             scores = scores.split(":")
             flexbox_dict[f"score_first_team_t1_M{idx+1}"] = scores[0]
-            flexbox_dict[
-                f"score_first_team_t2_M{idx+1}"
-            ] = scores[1].split("; ")[1]
-            flexbox_dict[
-                f"score_second_team_t1_M{idx+1}"
-            ] = scores[1].split("; ")[0]
-            flexbox_dict[
-                f"score_second_team_t2_M{idx+1}"
-            ] = scores[-1].strip(")")[0]
+            flexbox_dict[f"score_first_team_t2_M{idx+1}"] = scores[1].split("; ")[1]
+            flexbox_dict[f"score_second_team_t1_M{idx+1}"] = scores[1].split("; ")[0]
+            flexbox_dict[f"score_second_team_t2_M{idx+1}"] = scores[-1].strip(")")[0]
 
         if len(sides) < 3:
             flexbox_dict["side_first_team_M3"] = "-"
@@ -206,28 +190,24 @@ class ExtractDetails:
             './/span[@class="player-nick"]'
         )
         nicks = [
-            n.get_attribute("textContent").lstrip().rstrip() for
-            n in nicks_element
+            n.get_attribute("textContent").lstrip().rstrip() for n in nicks_element
         ]
 
-        lineup_dict[
-            f"{['first','second'][idx_team]}_team_P{idx_player+1}"
-        ] = nicks[idx_player]
+        lineup_dict[f"{['first','second'][idx_team]}_team_P{idx_player+1}"] = nicks[
+            idx_player
+        ]
 
         for tab_idx, table in enumerate(tables):
             nicks_element = table.find_elements_by_xpath(
                 './/span[@class="player-nick"]'
             )
             nicks = [
-                n.get_attribute("textContent").lstrip().rstrip()
-                for n in nicks_element
+                n.get_attribute("textContent").lstrip().rstrip() for n in nicks_element
             ]
 
             # Locate Player
             nicks_idx_locate = nicks.index(
-                lineup_dict[
-                    f"{['first','second'][idx_team]}_team_P{idx_player+1}"
-                ]
+                lineup_dict[f"{['first','second'][idx_team]}_team_P{idx_player+1}"]
             )
 
             # Kills - Deaths
@@ -298,8 +278,7 @@ class ExtractDetails:
                 date_dict = self.get_date()
                 flexbox_dict = self.get_flexbox()
                 lineup_dict = self.get_lineup()
-                picks_bans_dict = self.get_picks_bans(
-                    flexbox_dict["first_team"])
+                picks_bans_dict = self.get_picks_bans(flexbox_dict["first_team"])
 
                 details_dict = {
                     **date_dict,
@@ -311,39 +290,61 @@ class ExtractDetails:
                 details.append(details_dict)
 
             except KeyboardInterrupt:
-                self.print_message('KeyboardInterrupt', "Saving data", "e")
+                self.print_message("KeyboardInterrupt", "Saving data", "e")
                 self.to_close = True
 
                 return details
 
             except NoSuchElementException:
-                self.print_message(NoSuchElementException, "Saving data", "e")
-                self.to_close = True
+                self.print_message(
+                    "NoSuchElementException", f"Match disregarded for missing data.ulr: {url}", "n"
+                )
 
-                return details
+            except IndexError:
+                self.print_message(
+                    "IndexError", f"Match disregarded for missing data.ulr: {url}", "n"
+                )
+
+            except WebDriverException:
+                self.print_message(
+                    "WebDriverException", f"Match disregarded for missing data.ulr: {url}", "n"
+                )
+
 
         return details
 
+    def fix_data(self):
+        with open(f"datacs/{self.filename}", "r") as f:
+            d = f.read()
+
+        if d[-4] == ",":
+            d = d.strip(",\n]\n") + "\n]\n"
+            self.print_message("Data fixed!", "Error found and fixed", "s")
+        else:
+            self.print_message("Error!", "Problem in Data not found", "e")
+
+        with open(f"datacs/{self.filename}", "w") as f:
+            f.write(d)
+
     def check_duplicates(self, url_list):
-        if not (
-            self.filename in os.listdir("datacs/")
-        ):
+        if not (self.filename in os.listdir("datacs/")):
             return url_list
 
         else:
-            data = pd.read_json("datacs/" + self.filename)
-            url_list = list(
-                set(url_list)
-                - set(data['url'].tolist())
-            )
+            try:
+                data = pd.read_json("datacs/" + self.filename)
+            except ValueError:
+                self.print_message("ValueError", "Trying to fix data", "e")
+                self.fix_data()
+                data = pd.read_json("datacs/" + self.filename)
+
+            url_list = list(set(url_list) - set(data["url"].tolist()))
 
         return url_list
 
     def write_file(self, details):
         """Write collected results in JSON file"""
-        if not (
-            self.filename in os.listdir("datacs/")
-        ):
+        if not (self.filename in os.listdir("datacs/")):
             with open(
                 f"datacs/{self.filename}",
                 "w",
@@ -357,9 +358,7 @@ class ExtractDetails:
                         f.write("\n")
                 f.write("]\n")
 
-            self.print_message(
-                "Success", "All matches have been saved", "s"
-            )
+            self.print_message("Success", "All matches have been saved", "s")
 
         else:
             with open(
@@ -383,33 +382,23 @@ class ExtractDetails:
                         f.write("\n")
                 f.write("]\n")
 
-            self.print_message(
-                "Success", "All matches have been saved", "s"
-            )
-            self.browser.quit()
+            self.print_message("Success", "All matches have been saved", "s")
 
     def extract_players(self, url_list):
         """Return player details for each match"""
         details = []
-        self.browser = Chrome(options=self.chrome_options)
         url_list = self.check_duplicates(url_list)
 
         if len(url_list) != 0:
             details = self.get_details(url_list, details)
             self.write_file(details)
-        else:
-            self.browser.quit()
-
-        if self.to_close:
-            self.browser.quit()
 
         return self.to_close
 
 
 if __name__ == "__main__":
-    ext_details = ExtractDetails()
+    browser = Chrome()
+    ext_details = ExtractDetails(browser)
 
     data = pd.read_csv("HTLV_results.csv", sep=";", index_col=0)
-    ext_details.extract_players(
-        list(data[data["type_of_match"] == "bo3"]['match_url'])
-    )
+    ext_details.extract_players(list(data[data["type_of_match"] == "bo3"]["match_url"]))
