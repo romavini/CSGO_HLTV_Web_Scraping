@@ -47,16 +47,26 @@ class Extract:
         self.browser.get(pages[0])
         sleep(1 + random())
 
-        pages_element = self.browser.find_element_by_class_name("pagination-data")
+        pages_element = self.browser.find_element_by_class_name(
+            "pagination-data"
+        )
         max_pages = (
-            int(int(pages_element.text.split(" of ")[-1].lstrip().rstrip()) / 100) - 1
+            int(
+                int(pages_element.text.split(" of ")[-1].lstrip().rstrip())
+                / 100
+            )
+            - 1
         )
 
         if self.n_page_start != 1:
             pages = []
 
-        for i in range(self.n_page_start - 2, min([self.n_page_end - 1, max_pages])):
-            pages.append("https://www.hltv.org/results?offset=" + str((i + 1) * 100))
+        for i in range(
+            self.n_page_start - 2, min([self.n_page_end - 1, max_pages])
+        ):
+            pages.append(
+                "https://www.hltv.org/results?offset=" + str((i + 1) * 100)
+            )
 
         return pages
 
@@ -88,7 +98,9 @@ class Extract:
                 to_close = ext_details.extract_players(match_links)
 
                 if to_close:
-                    self.print_message("Stopped", "Exception in extraction", "e")
+                    self.print_message(
+                        "Stopped", "Exception in extraction", "e"
+                    )
                     self.browser.quit()
                     return
 

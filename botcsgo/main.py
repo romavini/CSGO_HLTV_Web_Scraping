@@ -3,7 +3,6 @@ from botcsgo.extract_matches import Extract
 
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import NoSuchElementException
 
 if __name__ == "__main__":
     print("\nMatches Extractor\n")
