@@ -49,14 +49,14 @@ class Extract:
 
         pages_element = self.browser.find_element_by_class_name("pagination-data")
         max_pages = (
-            int(int(pages_element.text.split(" of ")[-1].lstrip().rstrip()) / 100) - 1
+            int(int(pages_element.text.split(" of ")[-1].lstrip().rstrip()) / 100)
         )
 
-        if self.n_page_start != 1:
-            pages = []
-
-        for i in range(self.n_page_start - 2, min([self.n_page_end - 1, max_pages])):
-            pages.append("https://www.hltv.org/results?offset=" + str((i + 1) * 100))
+        for i in range(self.n_page_start, min([self.n_page_end, max_pages])):
+            if self.n_page_start != 1:
+                pages = []
+            else:
+                pages.append("https://www.hltv.org/results?offset=" + str((i - 1) * 100))
 
         return pages
 
