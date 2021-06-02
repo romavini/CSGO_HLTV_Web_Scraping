@@ -1,5 +1,5 @@
-from botcsgo.extract_details import ExtractDetails
-from botcsgo.extract_matches import Extract
+from csgo_hltv.extract_details import ExtractDetails
+from csgo_hltv.extract_matches import Extract
 
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options

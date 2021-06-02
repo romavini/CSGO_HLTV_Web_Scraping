@@ -126,9 +126,7 @@ class ExtractDetails:
 
         for idx, side in enumerate(sides):
             ct = int(side.find_element_by_class_name("ct").text)
-            score_first_team = int(
-                side.text.strip("(").split(";")[0].split(":")[0]
-            )
+            score_first_team = int(side.text.strip("(").split(";")[0].split(":")[0])
             if ct == score_first_team:
                 flexbox_dict[f"side_first_team_M{idx+1}"] = "CT"
                 flexbox_dict[f"side_second_team_M{idx+1}"] = "T"
@@ -139,15 +137,9 @@ class ExtractDetails:
             scores = side.text.split("(")[1]
             scores = scores.split(":")
             flexbox_dict[f"score_first_team_t1_M{idx+1}"] = scores[0]
-            flexbox_dict[f"score_first_team_t2_M{idx+1}"] = scores[1].split(
-                "; "
-            )[1]
-            flexbox_dict[f"score_second_team_t1_M{idx+1}"] = scores[1].split(
-                "; "
-            )[0]
-            flexbox_dict[f"score_second_team_t2_M{idx+1}"] = scores[-1].strip(
-                ")"
-            )[0]
+            flexbox_dict[f"score_first_team_t2_M{idx+1}"] = scores[1].split("; ")[1]
+            flexbox_dict[f"score_second_team_t1_M{idx+1}"] = scores[1].split("; ")[0]
+            flexbox_dict[f"score_second_team_t2_M{idx+1}"] = scores[-1].strip(")")[0]
 
         if len(sides) < 3:
             flexbox_dict["side_first_team_M3"] = "-"
@@ -200,28 +192,24 @@ class ExtractDetails:
             './/span[@class="player-nick"]'
         )
         nicks = [
-            n.get_attribute("textContent").lstrip().rstrip()
-            for n in nicks_element
+            n.get_attribute("textContent").lstrip().rstrip() for n in nicks_element
         ]
 
-        lineup_dict[
-            f"{['first','second'][idx_team]}_team_P{idx_player+1}"
-        ] = nicks[idx_player]
+        lineup_dict[f"{['first','second'][idx_team]}_team_P{idx_player+1}"] = nicks[
+            idx_player
+        ]
 
         for tab_idx, table in enumerate(tables):
             nicks_element = table.find_elements_by_xpath(
                 './/span[@class="player-nick"]'
             )
             nicks = [
-                n.get_attribute("textContent").lstrip().rstrip()
-                for n in nicks_element
+                n.get_attribute("textContent").lstrip().rstrip() for n in nicks_element
             ]
 
             # Locate Player
             nicks_idx_locate = nicks.index(
-                lineup_dict[
-                    f"{['first','second'][idx_team]}_team_P{idx_player+1}"
-                ]
+                lineup_dict[f"{['first','second'][idx_team]}_team_P{idx_player+1}"]
             )
 
             # Kills - Deaths
@@ -292,9 +280,7 @@ class ExtractDetails:
                 date_dict = self.get_date()
                 flexbox_dict = self.get_flexbox()
                 lineup_dict = self.get_lineup()
-                picks_bans_dict = self.get_picks_bans(
-                    flexbox_dict["first_team"]
-                )
+                picks_bans_dict = self.get_picks_bans(flexbox_dict["first_team"])
 
                 details_dict = {
                     **date_dict,
@@ -422,6 +408,4 @@ if __name__ == "__main__":
     ext_details = ExtractDetails(browser)
 
     data = pd.read_csv("HTLV_results.csv", sep=";", index_col=0)
-    ext_details.extract_players(
-        list(data[data["type_of_match"] == "bo3"]["match_url"])
-    )
+    ext_details.extract_players(list(data[data["type_of_match"] == "bo3"]["match_url"]))

@@ -1,9 +1,9 @@
 from distutils.core import setup
 
 setup(
-    name="CS Bot",
+    name="CS bo3 HLTV",
     version="1.0.0",
-    description="A bot to bat in CSGO matches.",
+    description="A web scraping project to collect CS:GO matches from HLTV.org.",
     author="romavini",
-    packages=["botcsgo"],
+    packages=["csgo_hltv"],
 )

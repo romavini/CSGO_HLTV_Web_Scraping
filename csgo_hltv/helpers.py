@@ -4,9 +4,7 @@ import pandas as pd
 
 
 def get_data_path(filename):
-    if not (
-        "datacs" in os.listdir(os.path.join(os.path.dirname(__file__), ".."))
-    ):
+    if not ("datacs" in os.listdir(os.path.join(os.path.dirname(__file__), ".."))):
         os.mkdir(os.path.dirname(__file__), "..", "datacs")
 
     return os.path.abspath(
@@ -27,6 +25,4 @@ def read_datacs(filename: str = "total_details.json") -> pd.DataFrame:
         axis=1,
     )
 
-    return df.sort_values("timestamp", axis=0, ascending=False).reset_index(
-        drop=True
-    )
+    return df.sort_values("timestamp", axis=0, ascending=False).reset_index(drop=True)
